@@ -1,0 +1,17 @@
+FROM alpine:3.14
+
+RUN apk --no-cache add curl
+
+RUN mkdir -p /workdir/crt
+
+WORKDIR /workdir
+
+COPY *.sh /workdir/
+
+RUN chmod +x *.sh && ./generate_ca.sh
+
+CMD ["apiserver.com,127.0.0.1","apiserver"]
+
+ENTRYPOINT ["/bin/sh","-c","generate_crt.sh"]
+
+
