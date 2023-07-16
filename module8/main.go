@@ -1,13 +1,33 @@
 package main
 
 import (
-	"fmt"
+	"flag"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+
+	"k8s.io/klog/v2"
 )
 
 func main() {
+	klog.InitFlags(nil)
+	defer klog.Flush()
+
+	level, err := ioutil.ReadFile("/workdir/conf/loglevel")
+	if err != nil {
+		klog.Fatalf("read config failed: %v", err)
+	}
+
+	flag.Set("v", string(level))
+	flag.Parse()
+
+	pid := os.Getpid()
+	if err := ioutil.WriteFile("/workdir/.pidfile", []byte(strconv.Itoa(pid)), 0600); err != nil {
+		klog.Fatalf("write pid file failed: %v", err)
+	}
+
 	http.HandleFunc("/", readVersion)
 	http.ListenAndServeTLS("0.0.0.0:80", "apiserver.pem", "apiserver-key.pem", nil)
 }
@@ -32,5 +52,5 @@ func readVersion(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(statusCode)
 
-	fmt.Printf("client-ip: %s, http-status-code: %d\n", remoteIP, statusCode)
+	klog.Infof("client-ip: %s, http-status-code: %d\n", remoteIP, statusCode)
 }

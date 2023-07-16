@@ -30,6 +30,9 @@ cfssl gencert \
     -config=ca-config.json \
     -hostname=${hosts} \
     -profile=kubernetes \
-    ${commonname}-csr.json | cfssljson -bare crt/${commonname}
+    ${commonname}-csr.json | cfssljson -bare /crts/${commonname}
+
+cp /workdir/*.pem /crts/   
+cp /workdir/ca-config.json /crts/ 
 
 set +eu
